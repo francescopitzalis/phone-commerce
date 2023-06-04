@@ -198,19 +198,25 @@ public with sharing class ProductTriggerHandler extends TriggerHandler {
 
     private void setIsKitFlagOnParent(List<Product__c> products) {
         for (Product__c product : products) {
+
             if (product.Kit__c != null) {
                 Product__c parent = allProductsMap.get(product.Kit__c);
                 // Don't update if parent already has the IsKit__c flag set to true
                 if (!parent.IsKit__c) {
-                    Product__c toUpdate = productsToUpdate.get(parent.Id);
-                    if (toUpdate == null) {
-                        toUpdate = new Product__c(Id = parent.Id);
-                        productsToUpdate.put(parent.Id, toUpdate);
-                    }
+                    Product__c toUpdate = getProductToUpdate(parent.Id);
                     toUpdate.IsKit__c = true;
                 }
             }
         }
+    }
+
+    private Product__c getProductToUpdate(Id productId) {
+        Product__c toUpdate = productsToUpdate.get(productId);
+        if (toUpdate == null) {
+            toUpdate = new Product__c(Id = productId);
+            productsToUpdate.put(productId, toUpdate);
+        }
+        return toUpdate;
     }
 
     private List<Product__c> getProductsWithKitChanged() {
@@ -245,11 +251,7 @@ public with sharing class ProductTriggerHandler extends TriggerHandler {
 
     private void updateKitsPrice(Set<Id> kitIds) {
         for (Id kitId : kitIds) {
-            Product__c toUpdate = productsToUpdate.get(kitId);
-            if (toUpdate == null) {
-                toUpdate = new Product__c(Id = kitId);
-                productsToUpdate.put(kitId, toUpdate);
-            }
+            Product__c toUpdate = getProductToUpdate(kitId);
             toUpdate.Price__c = calculateKitPrice(kitId);
         }
     }
